@@ -1,0 +1,129 @@
+extends CanvasLayer
+
+# Nodos UI
+@onready var joystick_background = $JoystickBackground
+@onready var joystick_handle = $JoystickBackground/JoystickHandle
+@onready var shoot_button = $ShootButton
+@onready var pass_button = $PassButton
+@onready var sprint_button = $SprintButton
+@onready var skill_wheel = $SkillWheel
+
+# Variables
+var joystick_radius: float = 100.0
+var joystick_active: bool = false
+var joystick_center: Vector2
+
+func _ready():
+    # Configurar joystick
+    joystick_radius = joystick_background.size.x / 2
+    joystick_center = joystick_background.position
+    
+    # Conectar botones
+    shoot_button.pressed.connect(_on_shoot_pressed)
+    pass_button.pressed.connect(_on_pass_pressed)
+    sprint_button.pressed.connect(_on_sprint_pressed)
+    sprint_button.button_up.connect(_on_sprint_released)
+    
+    # Configurar botones para móvil
+    _setup_touch_buttons()
+
+func _setup_touch_buttons():
+    # Hacer botones más grandes para dedos
+    var button_size = Vector2(150, 150)
+    
+    shoot_button.custom_minimum_size = button_size
+    pass_button.custom_minimum_size = button_size
+    sprint_button.custom_minimum_size = Vector2(120, 120)
+    
+    # Agregar efectos táctiles
+    _add_button_feedback(shoot_button)
+    _add_button_feedback(pass_button)
+    _add_button_feedback(sprint_button)
+
+func _add_button_feedback(button: Button):
+    # Efecto al presionar
+    button.pressed.connect(func():
+        var tween = create_tween()
+        tween.tween_property(button, "scale", Vector2(0.9, 0.9), 0.1)
+        tween.tween_property(button, "scale", Vector2(1.0, 1.0), 0.1)
+    )
+
+func _input(event):
+    if event is InputEventScreenTouch:
+        _handle_touch(event)
+    elif event is InputEventScreenDrag and joystick_active:
+        _handle_drag(event)
+
+func _handle_touch(event: InputEventScreenTouch):
+    if event.pressed:
+        # Verificar si toca el joystick
+        var touch_pos = event.position
+        var joystick_area = Rect2(
+            joystick_center - Vector2(joystick_radius, joystick_radius),
+            Vector2(joystick_radius * 2, joystick_radius * 2)
+        )
+        
+        if joystick_area.has_point(touch_pos):
+            joystick_active = true
+    else:
+        joystick_active = false
+        joystick_handle.position = Vector2.ZERO
+        # Emitir señal de joystick liberado
+        Input.action_release("move_left")
+        Input.action_release("move_right")
+        Input.action_release("move_forward")
+        Input.action_release("move_back")
+
+func _handle_drag(event: InputEventScreenDrag):
+    if not joystick_active:
+        return
+    
+    var drag_vector = event.position - joystick_center
+    var distance = drag_vector.length()
+    
+    # Limitar al radio del joystick
+    if distance > joystick_radius:
+        drag_vector = drag_vector.normalized() * joystick_radius
+    
+    # Mover handle visualmente
+    joystick_handle.position = drag_vector
+    
+    # Convertir a input del juego
+    var normalized = drag_vector / joystick_radius
+    
+    # Simular input actions
+    if normalized.x < -0.2:
+        Input.action_press("move_left", abs(normalized.x))
+    else:
+        Input.action_release("move_left")
+    
+    if normalized.x > 0.2:
+        Input.action_press("move_right", normalized.x)
+    else:
+        Input.action_release("move_right")
+    
+    if normalized.y < -0.2:
+        Input.action_press("move_forward", abs(normalized.y))
+    else:
+        Input.action_release("move_forward")
+    
+    if normalized.y > 0.2:
+        Input.action_press("move_back", normalized.y)
+    else:
+        Input.action_release("move_back")
+
+func _on_shoot_pressed():
+    Input.action_press("shoot")
+    await get_tree().process_frame
+    Input.action_release("shoot")
+
+func _on_pass_pressed():
+    Input.action_press("pass")
+    await get_tree().process_frame
+    Input.action_release("pass")
+
+func _on_sprint_pressed():
+    Input.action_press("sprint")
+
+func _on_sprint_released():
+    Input.action_release("sprint")￼Enter

@@ -1,0 +1,51 @@
+[application]
+
+config/name="The World of Football"
+config/description="Juego de fútbol 3D móvil estilo Captain Tsubasa"
+run/main_scene="res://scenes/ui/main_menu.tscn"
+config/features=PackedStringArray("4.0", "Mobile")
+config/icon="res://assets/textures/icon.png"
+
+[display]
+
+window/size/viewport_width=1080
+window/size/viewport_height=1920
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+window/handheld/orientation="landscape"
+
+[input]
+
+# Controles táctiles
+ui_touch:
+  deadzone=0.2
+  events=[InputEventScreenTouch]
+
+move_left:
+  deadzone=0.15
+  events=[InputEventJoypadMotion, InputEventKey]
+
+move_right:
+  deadzone=0.15
+  events=[InputEventJoypadMotion, InputEventKey]
+
+shoot:
+  events=[InputEventScreenTouch]
+
+pass_action:
+  events=[InputEventScreenTouch]
+
+sprint:
+  events=[InputEventScreenTouch]
+
+[rendering]
+
+renderer/rendering_method="forward_plus"
+renderer/rendering/quality/driver/driver_name="GLES3"
+quality/2d/use_pixel_snap=true
+
+# Optimización para móvil
+quality/driver/detail="low"
+quality/msaa/3d="disabled"
+quality/shadows/filter_mode="disabled"
+quality/shadows/size=1024￼Enter
